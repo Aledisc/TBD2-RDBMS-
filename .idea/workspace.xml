@@ -4,18 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ec6ddba0-146e-4a49-8417-67ccda67cf82" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/RDBMS TBD2.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/db_connection.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/login.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main_window.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test_connection.py" afterDir="false" />
-    </list>
+    <list default="true" id="ec6ddba0-146e-4a49-8417-67ccda67cf82" name="Changes" comment="Ahora si arranco macizo el proyecto. Interfaz funcional ya, con arbol de objetos y vainas." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -31,6 +20,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "Aledisc"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/Aledisc/Proyecto-primer-parcial-TBD2.git",
+    "accountId": "314d8cd1-af5d-4543-93cb-27421d616e4e"
+  }
+}]]></component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 1
 }</component>
@@ -145,6 +146,27 @@
       <option name="presentableId" value="Default" />
       <updated>1771220378175</updated>
     </task>
+    <task id="LOCAL-00001" summary="Ahora si arranco macizo el proyecto. Interfaz funcional ya, con arbol de objetos y vainas.">
+      <option name="closed" value="true" />
+      <created>1771540101434</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1771540101434</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Ahora si arranco macizo el proyecto. Interfaz funcional ya, con arbol de objetos y vainas.">
+      <option name="closed" value="true" />
+      <created>1771540110867</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1771540110867</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Ahora si arranco macizo el proyecto. Interfaz funcional ya, con arbol de objetos y vainas." />
+    <option name="LAST_COMMIT_MESSAGE" value="Ahora si arranco macizo el proyecto. Interfaz funcional ya, con arbol de objetos y vainas." />
   </component>
 </project>
