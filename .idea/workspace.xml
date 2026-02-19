@@ -28,7 +28,7 @@
 }]]></component>
   <component name="GithubPullRequestsUISettings"><![CDATA[{
   "selectedUrlAndAccountId": {
-    "url": "https://github.com/Aledisc/Proyecto-primer-parcial-TBD2.git",
+    "url": "https://github.com/Aledisc/TBD2-RDBMS-.git",
     "accountId": "314d8cd1-af5d-4543-93cb-27421d616e4e"
   }
 }]]></component>
@@ -52,7 +52,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "master",
     "junie.onboarding.icon.badge.shown": "true",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "settings.editor.selected.configurable": "Errors",
     "to.speed.mode.migration.done": "true"
   }
 }]]></component>
