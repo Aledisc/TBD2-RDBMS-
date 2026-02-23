@@ -21,8 +21,8 @@ class MainWindow:
         left_frame.pack(side=tk.LEFT, fill=tk.Y)
 
         # --- Panel derecho  ---
-        right_frame = tk.Frame(main_frame)
-        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        self.right_frame = tk.Frame(main_frame)
+        self.right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
         # --- Árbol de objetos ---
         self.tree = ttk.Treeview(left_frame)
@@ -43,12 +43,13 @@ class MainWindow:
         self.users_node = self.tree.insert(db_node, "end", text="Users")
 
         # --- Placeholder del área derecha
-        label = tk.Label(
+        '''label = tk.Label(
             right_frame,
             text="Área de trabajo",
             font=("Arial", 16)
         )
         label.pack(pady=20)
+        '''
 
 
     def run(self):
@@ -73,3 +74,30 @@ class MainWindow:
         print("click en: ", item_text)
         if item_text == "Tables":
             self.load_tables()
+        else:
+            self.load_table_data(item_text)
+
+    def load_table_data(self, table_name):
+
+        # Limpiar panel derecho
+        for widget in self.right_frame.winfo_children():
+            widget.destroy()
+
+        cursor = self.connection.cursor()
+        query = f"SELECT * FROM {table_name} LIMIT 100;"
+        cursor.execute(query)
+
+        rows = cursor.fetchall()
+        columns = [desc[0] for desc in cursor.description]
+
+        table = ttk.Treeview(self.right_frame, columns=columns, show="headings")
+        table.pack(fill=tk.BOTH, expand=True)
+
+        # Crear encabezados
+        for col in columns:
+            table.heading(col, text=col)
+            table.column(col, width=120)
+
+        # Insertar filas
+        for row in rows:
+            table.insert("", "end", values=row)
