@@ -21,15 +21,37 @@ class MainWindow:
         left_frame = tk.Frame(main_frame, width=300, bg="#f0f0f0")
         left_frame.pack(side=tk.LEFT, fill=tk.Y)
 
+        # --- Árbol de objetos ---
+        # --- Barra superior de botones ---
+        top_left_frame = tk.Frame(left_frame)
+        top_left_frame.pack(fill=tk.X, pady=5)
+
+        btn_editor = tk.Button(
+            top_left_frame,
+            text="Editor SQL",
+            command=self.show_sql_editor
+        )
+        btn_editor.pack(fill=tk.X, padx=5, pady=2)
+
+        btn_logout = tk.Button(
+            top_left_frame,
+            text="Cerrar sesión",
+            command=self.logout
+        )
+        btn_logout.pack(fill=tk.X, padx=5, pady=2)
+
+        # --- Árbol ---
+        self.tree = ttk.Treeview(left_frame)
+        self.tree.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+
+        self.tree.bind("<<TreeviewSelect>>", self.on_tree_click)
+
+
         # --- Panel derecho  ---
         self.right_frame = tk.Frame(main_frame)
         self.right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
-        # --- Árbol de objetos ---
-        self.tree = ttk.Treeview(left_frame)
-        self.tree.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-        # asociar tablas al arbol
-        self.tree.bind("<<TreeviewSelect>>", self.on_tree_click)
+
 
         # Nodo raíz (base de datos)
         db_node = self.tree.insert("", "end", text="Base de Datos", open=True)
@@ -168,3 +190,11 @@ class MainWindow:
 
         for row in rows:
             table.insert("", "end", values=row)
+
+    def logout(self):
+        self.connection.close()
+        self.root.destroy()
+
+        from login import LoginWindow
+        login = LoginWindow()
+        login.run()
