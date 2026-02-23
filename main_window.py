@@ -40,6 +40,20 @@ class MainWindow:
         )
         btn_logout.pack(fill=tk.X, padx=5, pady=2)
 
+        btn_ddl = tk.Button(
+            top_left_frame,
+            text="Mostrar DDL",
+            command=self.show_ddl
+        )
+        btn_ddl.pack(fill=tk.X, padx=5, pady=2)
+
+        btn_create_table = tk.Button(
+            top_left_frame,
+            text="Crear Tabla",
+            command=self.show_create_table
+        )
+        btn_create_table.pack(fill=tk.X, padx=5, pady=2)
+
         # --- Árbol ---
         self.tree = ttk.Treeview(left_frame)
         self.tree.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
@@ -99,6 +113,7 @@ class MainWindow:
         if item_text == "Tables":
             self.load_tables()
         else:
+            self.selected_table = item_text
             self.load_table_data(item_text)
 
     def load_table_data(self, table_name):
@@ -198,3 +213,102 @@ class MainWindow:
         from login import LoginWindow
         login = LoginWindow()
         login.run()
+
+    def show_ddl(self):
+
+        if not hasattr(self, "selected_table"):
+            messagebox.showwarning("Aviso", "Seleccione una tabla primero")
+            return
+
+        cursor = self.connection.cursor()
+        query = f"SHOW CREATE TABLE {self.selected_table};"
+        cursor.execute(query)
+
+        result = cursor.fetchone()
+        ddl = result[1]  # la segunda columna trae el CREATE
+
+        # Limpiamos panel derecho
+        for widget in self.right_frame.winfo_children():
+            widget.destroy()
+
+        ddl_text = tk.Text(self.right_frame)
+        ddl_text.pack(fill=tk.BOTH, expand=True)
+
+        ddl_text.insert(tk.END, ddl)
+
+    def show_create_table(self):
+
+        # Limpiar panel derecho
+        for widget in self.right_frame.winfo_children():
+            widget.destroy()
+
+        tk.Label(self.right_frame, text="Nombre de la tabla").pack(pady=5)
+        self.table_name_entry = tk.Entry(self.right_frame)
+        self.table_name_entry.pack()
+
+        tk.Label(self.right_frame, text="Columnas").pack(pady=5)
+
+        self.columns_frame = tk.Frame(self.right_frame)
+        self.columns_frame.pack()
+
+        self.column_entries = []
+
+        self.add_column_row()
+
+        add_btn = tk.Button(
+            self.right_frame,
+            text="Agregar Columna",
+            command=self.add_column_row
+        )
+        add_btn.pack(pady=5)
+
+        create_btn = tk.Button(
+            self.right_frame,
+            text="Crear Tabla",
+            command=self.create_table
+        )
+        create_btn.pack(pady=10)
+
+    def add_column_row(self):
+
+        row_frame = tk.Frame(self.columns_frame)
+        row_frame.pack(pady=2)
+
+        name_entry = tk.Entry(row_frame)
+        name_entry.pack(side=tk.LEFT, padx=5)
+
+        type_entry = tk.Entry(row_frame)
+        type_entry.pack(side=tk.LEFT, padx=5)
+
+        self.column_entries.append((name_entry, type_entry))
+
+    def create_table(self):
+
+        table_name = self.table_name_entry.get()
+
+        columns_sql = []
+
+        for name_entry, type_entry in self.column_entries:
+            name = name_entry.get()
+            col_type = type_entry.get()
+
+            if name and col_type:
+                columns_sql.append(f"{name} {col_type}")
+
+        if not table_name or not columns_sql:
+            messagebox.showerror("Error", "Datos incompletos")
+            return
+
+        columns_str = ", ".join(columns_sql)
+
+        query = f"CREATE TABLE {table_name} ({columns_str});"
+
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(query)
+            self.connection.commit()
+
+            messagebox.showinfo("Éxito", "Tabla creada correctamente")
+
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
