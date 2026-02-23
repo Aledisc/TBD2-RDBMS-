@@ -4,7 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ec6ddba0-146e-4a49-8417-67ccda67cf82" name="Changes" comment="actualizacion: ya carga tablas en el arbol">
+    <list default="true" id="ec6ddba0-146e-4a49-8417-67ccda67cf82" name="Changes" comment="actualizacion: ya se puede ver datos de tablas">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_window.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -189,7 +190,15 @@
       <option name="project" value="LOCAL" />
       <updated>1771815206533</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="actualizacion: ya se puede ver datos de tablas">
+      <option name="closed" value="true" />
+      <created>1771815632536</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1771815632536</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -207,6 +216,7 @@
     <MESSAGE value="Ahora si arranco macizo el proyecto. Interfaz funcional ya, con arbol de objetos y vainas." />
     <MESSAGE value="actualizacion" />
     <MESSAGE value="actualizacion: ya carga tablas en el arbol" />
-    <option name="LAST_COMMIT_MESSAGE" value="actualizacion: ya carga tablas en el arbol" />
+    <MESSAGE value="actualizacion: ya se puede ver datos de tablas" />
+    <option name="LAST_COMMIT_MESSAGE" value="actualizacion: ya se puede ver datos de tablas" />
   </component>
 </project>
