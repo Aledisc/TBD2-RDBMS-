@@ -54,6 +54,13 @@ class MainWindow:
         )
         btn_create_table.pack(fill=tk.X, padx=5, pady=2)
 
+        btn_create_view = tk.Button(
+            top_left_frame,
+            text="Crear Vista",
+            command=self.show_create_view
+        )
+        btn_create_view.pack(fill=tk.X, padx=5, pady=2)
+
         # --- Árbol ---
         self.tree = ttk.Treeview(left_frame)
         self.tree.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
@@ -286,8 +293,29 @@ class MainWindow:
         name_entry = tk.Entry(self.columns_frame, width=20)
         name_entry.grid(row=row_index, column=0, padx=10, pady=3, sticky="w")
 
-        type_entry = tk.Entry(self.columns_frame, width=20)
-        type_entry.grid(row=row_index, column=1, padx=10, pady=3, sticky="w")
+        # ---- Combobox de tipos ----
+        datatypes = [
+            "INT",
+            "VARCHAR(50)",
+            "VARCHAR(100)",
+            "VARCHAR(255)",
+            "TEXT",
+            "DATE",
+            "DATETIME",
+            "FLOAT",
+            "DOUBLE",
+            "DECIMAL(10,2)",
+            "BOOLEAN"
+        ]
+
+        type_combo = ttk.Combobox(
+            self.columns_frame,
+            values=datatypes,
+            width=18,
+            state="readonly"
+        )
+        type_combo.grid(row=row_index, column=1, padx=10, pady=3, sticky="w")
+        type_combo.set("INT")  # valor por defecto
 
         pk_var = tk.BooleanVar()
         pk_check = tk.Checkbutton(self.columns_frame, variable=pk_var)
@@ -297,7 +325,7 @@ class MainWindow:
         nn_check = tk.Checkbutton(self.columns_frame, variable=nn_var)
         nn_check.grid(row=row_index, column=3)
 
-        self.column_entries.append((name_entry, type_entry, pk_var, nn_var))
+        self.column_entries.append((name_entry, type_combo, pk_var, nn_var))
 
     def create_table(self):
 
@@ -333,5 +361,48 @@ class MainWindow:
             cursor.execute(query)
             self.connection.commit()
             messagebox.showinfo("Éxito", "Tabla creada correctamente")
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+
+    def show_create_view(self):
+
+        # Limpiar panel derecho
+        for widget in self.right_frame.winfo_children():
+            widget.destroy()
+
+        container = tk.Frame(self.right_frame)
+        container.pack(anchor="w", padx=20, pady=20)
+
+        tk.Label(container, text="Nombre de la vista").grid(row=0, column=0, sticky="w")
+        self.view_name_entry = tk.Entry(container, width=30)
+        self.view_name_entry.grid(row=0, column=1, pady=5, sticky="w")
+
+        tk.Label(container, text="Definición SELECT").grid(row=1, column=0, sticky="w")
+
+        self.view_sql_text = tk.Text(container, height=10, width=60)
+        self.view_sql_text.grid(row=2, column=0, columnspan=2, pady=10)
+
+        tk.Button(
+            container,
+            text="Crear Vista",
+            command=self.create_view
+        ).grid(row=3, column=0, pady=10, sticky="w")
+
+    def create_view(self):
+
+        view_name = self.view_name_entry.get()
+        select_sql = self.view_sql_text.get("1.0", tk.END).strip()
+
+        if not view_name or not select_sql:
+            messagebox.showerror("Error", "Datos incompletos")
+            return
+
+        query = f"CREATE VIEW {view_name} AS {select_sql};"
+
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(query)
+            self.connection.commit()
+            messagebox.showinfo("Éxito", "Vista creada correctamente")
         except Exception as e:
             messagebox.showerror("Error", str(e))
