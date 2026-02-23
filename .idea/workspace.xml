@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ec6ddba0-146e-4a49-8417-67ccda67cf82" name="Changes" comment="actualizacion: arregle la vaina de las vistas, ahora se ven por separado. tablas en nodo de tablas, vistas en nodo de vistas ejskmmdmowqmkslad que pije sueño">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/metadata.py" beforeDir="false" afterPath="$PROJECT_DIR$/metadata.py" afterDir="false" />
-    </list>
+    <list default="true" id="ec6ddba0-146e-4a49-8417-67ccda67cf82" name="Changes" comment="actualizacion: le agregue para mostrar dll de funciones y no se que mas vainas ahh para mostrar todos los objetos en las vainas estas de los nodos y arregle un chingomadral de errores que estaba dando en consola no se pero ya quedo mas pulido ahi terminare de pulirlo mas para hacerlo a prueba de indios y que quede bien y de ahi hacer vaina de documentacion y macanudo quedo para mañana &#10;d" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -247,7 +243,15 @@
       <option name="project" value="LOCAL" />
       <updated>1771830678217</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="actualizacion: le agregue para mostrar dll de funciones y no se que mas vainas ahh para mostrar todos los objetos en las vainas estas de los nodos y arregle un chingomadral de errores que estaba dando en consola no se pero ya quedo mas pulido ahi terminare de pulirlo mas para hacerlo a prueba de indios y que quede bien y de ahi hacer vaina de documentacion y macanudo quedo para mañana &#10;d">
+      <option name="closed" value="true" />
+      <created>1771832887715</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1771832887715</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -272,6 +276,7 @@
     <MESSAGE value="actualizacion: mejoras visuales para la vaina de create table" />
     <MESSAGE value="actualizacion: se agrego la vaina de creacion de vistas de forma visual" />
     <MESSAGE value="actualizacion: arregle la vaina de las vistas, ahora se ven por separado. tablas en nodo de tablas, vistas en nodo de vistas ejskmmdmowqmkslad que pije sueño" />
-    <option name="LAST_COMMIT_MESSAGE" value="actualizacion: arregle la vaina de las vistas, ahora se ven por separado. tablas en nodo de tablas, vistas en nodo de vistas ejskmmdmowqmkslad que pije sueño" />
+    <MESSAGE value="actualizacion: le agregue para mostrar dll de funciones y no se que mas vainas ahh para mostrar todos los objetos en las vainas estas de los nodos y arregle un chingomadral de errores que estaba dando en consola no se pero ya quedo mas pulido ahi terminare de pulirlo mas para hacerlo a prueba de indios y que quede bien y de ahi hacer vaina de documentacion y macanudo quedo para mañana &#10;d" />
+    <option name="LAST_COMMIT_MESSAGE" value="actualizacion: le agregue para mostrar dll de funciones y no se que mas vainas ahh para mostrar todos los objetos en las vainas estas de los nodos y arregle un chingomadral de errores que estaba dando en consola no se pero ya quedo mas pulido ahi terminare de pulirlo mas para hacerlo a prueba de indios y que quede bien y de ahi hacer vaina de documentacion y macanudo quedo para mañana &#10;d" />
   </component>
 </project>

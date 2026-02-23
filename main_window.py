@@ -263,6 +263,8 @@ class MainWindow:
                 query = f"SHOW CREATE PROCEDURE {obj};"
             elif obj_type == "Functions":
                 query = f"SHOW CREATE FUNCTION {obj};"
+            elif obj_type == "Triggers":
+                query = f"SHOW CREATE TRIGGER {obj};"
             else:
                 messagebox.showwarning("Aviso", "DDL no disponible para este objeto")
                 return
