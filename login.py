@@ -65,7 +65,7 @@ class LoginWindow:
                 print("Conectado correctamente")
                 self.root.destroy()
 
-                main_app = MainWindow(conn)
+                main_app = MainWindow(conn, database)
                 main_app.run()
             else:
                 messagebox.showerror("Error", "No se pudo conectar")
