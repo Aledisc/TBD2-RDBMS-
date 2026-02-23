@@ -242,73 +242,96 @@ class MainWindow:
         for widget in self.right_frame.winfo_children():
             widget.destroy()
 
-        tk.Label(self.right_frame, text="Nombre de la tabla").pack(pady=5)
-        self.table_name_entry = tk.Entry(self.right_frame)
-        self.table_name_entry.pack()
+        container = tk.Frame(self.right_frame)
+        container.pack(anchor="w", padx=20, pady=20)
 
-        tk.Label(self.right_frame, text="Columnas").pack(pady=5)
+        # --------- Info general ---------
+        tk.Label(container, text="Nombre de la tabla:").grid(row=0, column=0, sticky="w")
+        self.table_name_entry = tk.Entry(container, width=30)
+        self.table_name_entry.grid(row=0, column=1, pady=5, sticky="w")
 
-        self.columns_frame = tk.Frame(self.right_frame)
-        self.columns_frame.pack()
+        tk.Label(container, text=f"Schema: {self.database}").grid(row=1, column=0, sticky="w")
+
+        # --------- Encabezados ----------
+        headers = ["Nombre Columna", "Datatype", "PK", "NN"]
+
+        for i, text in enumerate(headers):
+            tk.Label(container, text=text, font=("Arial", 10, "bold")).grid(
+                row=3, column=i, padx=10, sticky="w"
+            )
+
+        # --------- Frame columnas -------
+        self.columns_frame = tk.Frame(container)
+        self.columns_frame.grid(row=4, column=0, columnspan=4, sticky="w")
 
         self.column_entries = []
-
         self.add_column_row()
 
-        add_btn = tk.Button(
-            self.right_frame,
+        tk.Button(
+            container,
             text="Agregar Columna",
             command=self.add_column_row
-        )
-        add_btn.pack(pady=5)
+        ).grid(row=5, column=0, pady=10, sticky="w")
 
-        create_btn = tk.Button(
-            self.right_frame,
+        tk.Button(
+            container,
             text="Crear Tabla",
             command=self.create_table
-        )
-        create_btn.pack(pady=10)
+        ).grid(row=6, column=0, pady=20, sticky="w")
 
     def add_column_row(self):
 
-        row_frame = tk.Frame(self.columns_frame)
-        row_frame.pack(pady=2)
+        row_index = len(self.column_entries)
 
-        name_entry = tk.Entry(row_frame)
-        name_entry.pack(side=tk.LEFT, padx=5)
+        name_entry = tk.Entry(self.columns_frame, width=20)
+        name_entry.grid(row=row_index, column=0, padx=10, pady=3, sticky="w")
 
-        type_entry = tk.Entry(row_frame)
-        type_entry.pack(side=tk.LEFT, padx=5)
+        type_entry = tk.Entry(self.columns_frame, width=20)
+        type_entry.grid(row=row_index, column=1, padx=10, pady=3, sticky="w")
 
-        self.column_entries.append((name_entry, type_entry))
+        pk_var = tk.BooleanVar()
+        pk_check = tk.Checkbutton(self.columns_frame, variable=pk_var)
+        pk_check.grid(row=row_index, column=2)
+
+        nn_var = tk.BooleanVar()
+        nn_check = tk.Checkbutton(self.columns_frame, variable=nn_var)
+        nn_check.grid(row=row_index, column=3)
+
+        self.column_entries.append((name_entry, type_entry, pk_var, nn_var))
 
     def create_table(self):
 
         table_name = self.table_name_entry.get()
-
         columns_sql = []
 
-        for name_entry, type_entry in self.column_entries:
+        for name_entry, type_entry, pk_var, nn_var in self.column_entries:
+
             name = name_entry.get()
             col_type = type_entry.get()
 
-            if name and col_type:
-                columns_sql.append(f"{name} {col_type}")
+            if not name or not col_type:
+                continue
+
+            col_def = f"{name} {col_type}"
+
+            if nn_var.get():
+                col_def += " NOT NULL"
+
+            if pk_var.get():
+                col_def += " PRIMARY KEY"
+
+            columns_sql.append(col_def)
 
         if not table_name or not columns_sql:
             messagebox.showerror("Error", "Datos incompletos")
             return
 
-        columns_str = ", ".join(columns_sql)
-
-        query = f"CREATE TABLE {table_name} ({columns_str});"
+        query = f"CREATE TABLE {table_name} ({', '.join(columns_sql)});"
 
         try:
             cursor = self.connection.cursor()
             cursor.execute(query)
             self.connection.commit()
-
             messagebox.showinfo("Éxito", "Tabla creada correctamente")
-
         except Exception as e:
             messagebox.showerror("Error", str(e))
