@@ -45,16 +45,18 @@ class LoginWindow:
     def login(self):
         try:
             print("Botón presionado")
+            # CONSTANTE SOLO PARA AUTOMATIZAR TESTING QUITAR EN ENTREGA FINAL OJALA LEAS ESTO YO DEL FUTURO!!!
+            self.host_entry.insert(0, "localhost")
+            self.user_entry.insert(0, "root")
+            self.password_entry.insert(0, "123456")
+            self.db_entry.insert(0, "tbd2_python")
+
 
             host = self.host_entry.get()
             user = self.user_entry.get()
             password = self.password_entry.get()
             database = self.db_entry.get()
-            #CONSTANTE SOLO PARA AUTOMATIZAR TESTING QUITAR EN ENTREGA FINAL OJALA LEAS ESTO YO DEL FUTURO!!!
-            self.host_entry.insert(0, "localhost")
-            self.user_entry.insert(0, "root")
-            self.password_entry.insert(0, "123456")
-            self.db_entry.insert(0, "tbd2_python")
+
 
             print("Intentando conectar...")
             conn = create_connection(host, user, password, database)
