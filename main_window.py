@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from metadata import get_tables_and_views
+from metadata import get_tables_and_views, get_procedures_and_functions, get_triggers, get_users, get_indexes
 from tkinter import messagebox
 
 class MainWindow:
@@ -21,7 +21,7 @@ class MainWindow:
         left_frame = tk.Frame(main_frame, width=300, bg="#f0f0f0")
         left_frame.pack(side=tk.LEFT, fill=tk.Y)
 
-        # --- Árbol de objetos ---
+        # --- arbol de objetos ---
         # --- Barra superior de botones ---
         top_left_frame = tk.Frame(left_frame)
         top_left_frame.pack(fill=tk.X, pady=5)
@@ -61,7 +61,7 @@ class MainWindow:
         )
         btn_create_view.pack(fill=tk.X, padx=5, pady=2)
 
-        # --- Árbol ---
+        # --arbol ---
         self.tree = ttk.Treeview(left_frame)
         self.tree.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
@@ -105,22 +105,45 @@ class MainWindow:
             self.tree.insert(self.views_node, "end", text=view)
 
     def on_tree_click(self, event):
+
         selected_item = self.tree.focus()
         item_text = self.tree.item(selected_item, "text")
 
+        parent = self.tree.parent(selected_item)
+        parent_text = self.tree.item(parent, "text")
+
         print("Click en:", item_text)
 
+        # Carpetas principales
         if item_text == "Tables":
             self.load_tables()
 
         elif item_text == "Views":
-
             self.load_tables()
 
-        else:
+        elif item_text == "Procedures":
+            self.load_procedures_and_functions()
 
-            self.selected_table = item_text
-            self.load_table_data(item_text)
+        elif item_text == "Functions":
+            self.load_procedures_and_functions()
+
+        elif item_text == "Triggers":
+            self.load_triggers()
+
+        elif item_text == "Indexes":
+            self.load_indexes()
+
+        elif item_text == "Users":
+            self.load_users()
+
+
+        else:
+            self.selected_object = item_text
+            self.selected_type = parent_text
+
+
+            if parent_text in ["Tables", "Views"]:
+                self.load_table_data(item_text)
 
     def load_table_data(self, table_name):
 
@@ -166,7 +189,7 @@ class MainWindow:
         )
         run_button.pack(pady=5)
 
-        # Frame resultados
+        # Frame  d resultados
         self.result_frame = tk.Frame(self.right_frame)
         self.result_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -188,7 +211,7 @@ class MainWindow:
                 self.show_results(columns, rows)
 
             else:
-                # INSERT, UPDATE, DELETE, CREATE, etc.
+                # INSERT, UPDATE, DELETE, CREATE, etc...
                 self.connection.commit()
                 messagebox.showinfo("Éxito", "Sentencia ejecutada correctamente")
 
@@ -222,43 +245,69 @@ class MainWindow:
 
     def show_ddl(self):
 
-        if not hasattr(self, "selected_table"):
-            messagebox.showwarning("Aviso", "Seleccione una tabla primero")
+        if not hasattr(self, "selected_object"):
+            messagebox.showwarning("Aviso", "Seleccione un objeto primero")
             return
 
         cursor = self.connection.cursor()
-        query = f"SHOW CREATE TABLE {self.selected_table};"
-        cursor.execute(query)
 
-        result = cursor.fetchone()
-        ddl = result[1]  # la segunda columna trae el CREATE
+        obj = self.selected_object
+        obj_type = self.selected_type
 
-        # Limpiamos panel derecho
-        for widget in self.right_frame.winfo_children():
-            widget.destroy()
+        try:
+            if obj_type == "Tables":
+                query = f"SHOW CREATE TABLE {obj};"
+            elif obj_type == "Views":
+                query = f"SHOW CREATE VIEW {obj};"
+            elif obj_type == "Procedures":
+                query = f"SHOW CREATE PROCEDURE {obj};"
+            elif obj_type == "Functions":
+                query = f"SHOW CREATE FUNCTION {obj};"
+            else:
+                messagebox.showwarning("Aviso", "DDL no disponible para este objeto")
+                return
 
-        ddl_text = tk.Text(self.right_frame)
-        ddl_text.pack(fill=tk.BOTH, expand=True)
+            cursor.execute(query)
+            result = cursor.fetchone()
 
-        ddl_text.insert(tk.END, ddl)
+            ddl = None
+            for item in result:
+                if isinstance(item, str) and item.strip().upper().startswith("CREATE"):
+                    ddl = item
+                    break
+
+            if not ddl:
+                messagebox.showerror("Error", "No se pudo obtener el DDL")
+                return
+
+            # Limpiar panel derecho
+            for widget in self.right_frame.winfo_children():
+                widget.destroy()
+
+            ddl_text = tk.Text(self.right_frame)
+            ddl_text.pack(fill=tk.BOTH, expand=True)
+            ddl_text.insert(tk.END, ddl)
+
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
 
     def show_create_table(self):
 
-        # Limpiar panel derecho
+        # Limpiar el panel derecho
         for widget in self.right_frame.winfo_children():
             widget.destroy()
 
         container = tk.Frame(self.right_frame)
         container.pack(anchor="w", padx=20, pady=20)
 
-        # --------- Info general ---------
+        # --------- Info general-------
         tk.Label(container, text="Nombre de la tabla:").grid(row=0, column=0, sticky="w")
         self.table_name_entry = tk.Entry(container, width=30)
         self.table_name_entry.grid(row=0, column=1, pady=5, sticky="w")
 
         tk.Label(container, text=f"Schema: {self.database}").grid(row=1, column=0, sticky="w")
 
-        # --------- Encabezados ----------
+        # -------Encabezados ----------
         headers = ["Nombre Columna", "Datatype", "PK", "NN"]
 
         for i, text in enumerate(headers):
@@ -266,7 +315,7 @@ class MainWindow:
                 row=3, column=i, padx=10, sticky="w"
             )
 
-        # --------- Frame columnas -------
+        # ---- Frame columnas ----
         self.columns_frame = tk.Frame(container)
         self.columns_frame.grid(row=4, column=0, columnspan=4, sticky="w")
 
@@ -292,7 +341,7 @@ class MainWindow:
         name_entry = tk.Entry(self.columns_frame, width=20)
         name_entry.grid(row=row_index, column=0, padx=10, pady=3, sticky="w")
 
-        # ---- Combobox de tipos ----
+        # ---- Wombocombobox de tipos -------
         datatypes = [
             "INT",
             "VARCHAR(50)",
@@ -365,7 +414,7 @@ class MainWindow:
 
     def show_create_view(self):
 
-        # Limpiar panel derecho
+        # Limpiar elpanel derecho
         for widget in self.right_frame.winfo_children():
             widget.destroy()
 
@@ -405,3 +454,38 @@ class MainWindow:
             messagebox.showinfo("Éxito", "Vista creada correctamente")
         except Exception as e:
             messagebox.showerror("Error", str(e))
+
+    def load_procedures_and_functions(self):
+
+        # Limpiar juquera de nodos anteriores
+        self.tree.delete(*self.tree.get_children(self.procedures_node))
+        self.tree.delete(*self.tree.get_children(self.functions_node))
+
+        procedures, functions = get_procedures_and_functions(
+            self.connection,
+            self.database
+        )
+
+        for proc in procedures:
+            self.tree.insert(self.procedures_node, "end", text=proc)
+
+        for func in functions:
+            self.tree.insert(self.functions_node, "end", text=func)
+
+    def load_triggers(self):
+        self.tree.delete(*self.tree.get_children(self.triggers_node))
+        triggers = get_triggers(self.connection, self.database)
+        for t in triggers:
+            self.tree.insert(self.triggers_node, "end", text=t)
+
+    def load_indexes(self):
+        self.tree.delete(*self.tree.get_children(self.indexes_node))
+        indexes = get_indexes(self.connection)
+        for i in indexes:
+            self.tree.insert(self.indexes_node, "end", text=i)
+
+    def load_users(self):
+        self.tree.delete(*self.tree.get_children(self.users_node))
+        users = get_users(self.connection)
+        for u in users:
+            self.tree.insert(self.users_node, "end", text=u)

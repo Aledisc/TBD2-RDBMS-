@@ -4,7 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ec6ddba0-146e-4a49-8417-67ccda67cf82" name="Changes" comment="actualizacion: se agrego la vaina de creacion de vistas de forma visual">
+    <list default="true" id="ec6ddba0-146e-4a49-8417-67ccda67cf82" name="Changes" comment="actualizacion: arregle la vaina de las vistas, ahora se ven por separado. tablas en nodo de tablas, vistas en nodo de vistas ejskmmdmowqmkslad que pije sueño">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_window.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/metadata.py" beforeDir="false" afterPath="$PROJECT_DIR$/metadata.py" afterDir="false" />
     </list>
@@ -238,7 +239,15 @@
       <option name="project" value="LOCAL" />
       <updated>1771830259757</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="actualizacion: arregle la vaina de las vistas, ahora se ven por separado. tablas en nodo de tablas, vistas en nodo de vistas ejskmmdmowqmkslad que pije sueño">
+      <option name="closed" value="true" />
+      <created>1771830678217</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1771830678217</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -262,6 +271,7 @@
     <MESSAGE value="actualizacion: mas ajustes, ahora genera DDL y tambien cree la parte en la que podemos crear la tabla visualmente" />
     <MESSAGE value="actualizacion: mejoras visuales para la vaina de create table" />
     <MESSAGE value="actualizacion: se agrego la vaina de creacion de vistas de forma visual" />
-    <option name="LAST_COMMIT_MESSAGE" value="actualizacion: se agrego la vaina de creacion de vistas de forma visual" />
+    <MESSAGE value="actualizacion: arregle la vaina de las vistas, ahora se ven por separado. tablas en nodo de tablas, vistas en nodo de vistas ejskmmdmowqmkslad que pije sueño" />
+    <option name="LAST_COMMIT_MESSAGE" value="actualizacion: arregle la vaina de las vistas, ahora se ven por separado. tablas en nodo de tablas, vistas en nodo de vistas ejskmmdmowqmkslad que pije sueño" />
   </component>
 </project>
