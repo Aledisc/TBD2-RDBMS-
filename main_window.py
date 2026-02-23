@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from metadata import get_tables
+from metadata import get_tables_and_views
 from tkinter import messagebox
 
 class MainWindow:
@@ -85,15 +85,6 @@ class MainWindow:
         self.triggers_node = self.tree.insert(db_node, "end", text="Triggers")
         self.indexes_node = self.tree.insert(db_node, "end", text="Indexes")
         self.users_node = self.tree.insert(db_node, "end", text="Users")
-
-        # --- Placeholder del área derecha
-        '''label = tk.Label(
-            right_frame,
-            text="Área de trabajo",
-            font=("Arial", 16)
-        )
-        label.pack(pady=20)
-        '''
         self.show_sql_editor()
 
 
@@ -101,25 +92,33 @@ class MainWindow:
         self.root.mainloop()
 
     def load_tables(self):
-        print("se supone que carga tablas...")
-        self.tree.delete(*self.tree.get_children(self.tables_node))
 
-        tables = get_tables(self.connection)
-        print("se supone que encontro las tablas:" , tables)
+        self.tree.delete(*self.tree.get_children(self.tables_node))
+        self.tree.delete(*self.tree.get_children(self.views_node))
+
+        tables, views = get_tables_and_views(self.connection)
 
         for table in tables:
             self.tree.insert(self.tables_node, "end", text=table)
 
-
+        for view in views:
+            self.tree.insert(self.views_node, "end", text=view)
 
     def on_tree_click(self, event):
         selected_item = self.tree.focus()
         item_text = self.tree.item(selected_item, "text")
 
-        print("click en: ", item_text)
+        print("Click en:", item_text)
+
         if item_text == "Tables":
             self.load_tables()
+
+        elif item_text == "Views":
+
+            self.load_tables()
+
         else:
+
             self.selected_table = item_text
             self.load_table_data(item_text)
 
