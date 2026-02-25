@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ec6ddba0-146e-4a49-8417-67ccda67cf82" name="Changes" comment="actualizacion: faltaba agregar nada mas la parte del ddl de los triggers">
+    <list default="true" id="ec6ddba0-146e-4a49-8417-67ccda67cf82" name="Changes" comment="actualizacion: Commit final. Documentacion agregada.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,22 +43,22 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.login.executor": "Run",
-    "Python.main.executor": "Run",
-    "Python.main_window.executor": "Run",
-    "Python.test_connection.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "junie.onboarding.icon.badge.shown": "true",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
-    "to.speed.mode.migration.done": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.login.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main_window.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_connection.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="Python.main">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="RDBMS TBD2" />
@@ -262,7 +261,23 @@
       <option name="project" value="LOCAL" />
       <updated>1771834122990</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="actualizacion: Commit final. Documentacion agregada.">
+      <option name="closed" value="true" />
+      <created>1771836525270</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1771836525270</updated>
+    </task>
+    <task id="LOCAL-00016" summary="actualizacion: Commit final. Documentacion agregada.">
+      <option name="closed" value="true" />
+      <created>1771836535040</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1771836535040</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -289,6 +304,7 @@
     <MESSAGE value="actualizacion: arregle la vaina de las vistas, ahora se ven por separado. tablas en nodo de tablas, vistas en nodo de vistas ejskmmdmowqmkslad que pije sueño" />
     <MESSAGE value="actualizacion: le agregue para mostrar dll de funciones y no se que mas vainas ahh para mostrar todos los objetos en las vainas estas de los nodos y arregle un chingomadral de errores que estaba dando en consola no se pero ya quedo mas pulido ahi terminare de pulirlo mas para hacerlo a prueba de indios y que quede bien y de ahi hacer vaina de documentacion y macanudo quedo para mañana &#10;d" />
     <MESSAGE value="actualizacion: faltaba agregar nada mas la parte del ddl de los triggers" />
-    <option name="LAST_COMMIT_MESSAGE" value="actualizacion: faltaba agregar nada mas la parte del ddl de los triggers" />
+    <MESSAGE value="actualizacion: Commit final. Documentacion agregada." />
+    <option name="LAST_COMMIT_MESSAGE" value="actualizacion: Commit final. Documentacion agregada." />
   </component>
 </project>
