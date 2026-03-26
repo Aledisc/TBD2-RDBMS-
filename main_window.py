@@ -1,493 +1,354 @@
 import tkinter as tk
-from tkinter import ttk
-from metadata import get_tables_and_views, get_procedures_and_functions, get_triggers, get_users, get_indexes
-from tkinter import messagebox
+from tkinter import ttk, messagebox
+import threading
+import datetime
+import os
+
+from sync import load_mapping, sync_in, sync_out, get_sync_history
+from metadata import (
+    get_tables_and_views, get_procedures_and_functions,
+    get_triggers, get_users, get_indexes
+)
+
 
 class MainWindow:
 
-    def __init__(self, connection, database):
-        self.connection = connection
-        self.database = database
+    def __init__(self, slave_conn, master_conn, database):
+        self.slave_conn  = slave_conn
+        self.master_conn = master_conn
+        self.database    = database
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        self.mapping = load_mapping(os.path.join(BASE_DIR, "mapping.json"))
 
+        # ── Ventana principal ──────────────────────────────
         self.root = tk.Tk()
-        self.root.title("Database Manager")
-        self.root.geometry("1200x700")
+        self.root.title("Sincronizador Pagila – Dashboard")
+        self.root.geometry("1280x750")
 
-        # --- Contenedor principal ---
         main_frame = tk.Frame(self.root)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # --- Panel izquierdo ---
-        left_frame = tk.Frame(main_frame, width=300, bg="#f0f0f0")
-        left_frame.pack(side=tk.LEFT, fill=tk.Y)
+        # ── Panel izquierdo (árbol de objetos) ────────────
+        left = tk.Frame(main_frame, width=260, bg="#f0f0f0")
+        left.pack(side=tk.LEFT, fill=tk.Y)
+        left.pack_propagate(False)
 
-        # --- arbol de objetos ---
-        # --- Barra superior de botones ---
-        top_left_frame = tk.Frame(left_frame)
-        top_left_frame.pack(fill=tk.X, pady=5)
+        tk.Label(left, text="Objetos DB", font=("Arial", 11, "bold"),
+                 bg="#f0f0f0").pack(pady=8)
 
-        btn_editor = tk.Button(
-            top_left_frame,
-            text="Editor SQL",
-            command=self.show_sql_editor
-        )
-        btn_editor.pack(fill=tk.X, padx=5, pady=2)
-
-        btn_logout = tk.Button(
-            top_left_frame,
-            text="Cerrar sesión",
-            command=self.logout
-        )
-        btn_logout.pack(fill=tk.X, padx=5, pady=2)
-
-        btn_ddl = tk.Button(
-            top_left_frame,
-            text="Mostrar DDL",
-            command=self.show_ddl
-        )
-        btn_ddl.pack(fill=tk.X, padx=5, pady=2)
-
-        btn_create_table = tk.Button(
-            top_left_frame,
-            text="Crear Tabla",
-            command=self.show_create_table
-        )
-        btn_create_table.pack(fill=tk.X, padx=5, pady=2)
-
-        btn_create_view = tk.Button(
-            top_left_frame,
-            text="Crear Vista",
-            command=self.show_create_view
-        )
-        btn_create_view.pack(fill=tk.X, padx=5, pady=2)
-
-        # --arbol ---
-        self.tree = ttk.Treeview(left_frame)
+        self.tree = ttk.Treeview(left)
         self.tree.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-
         self.tree.bind("<<TreeviewSelect>>", self.on_tree_click)
 
-
-        # --- Panel derecho  ---
-        self.right_frame = tk.Frame(main_frame)
-        self.right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
-
-
-
-        # Nodo raíz (base de datos)
-        db_node = self.tree.insert("", "end", text="Base de Datos", open=True)
-
-        # Nodos
-        self.tables_node = self.tree.insert(db_node, "end", text="Tables")
-        self.views_node = self.tree.insert(db_node, "end", text="Views")
+        db_node = self.tree.insert("", "end", text=f"⬡ {database}", open=True)
+        self.tables_node     = self.tree.insert(db_node, "end", text="Tables")
+        self.views_node      = self.tree.insert(db_node, "end", text="Views")
         self.procedures_node = self.tree.insert(db_node, "end", text="Procedures")
-        self.functions_node = self.tree.insert(db_node, "end", text="Functions")
-        self.triggers_node = self.tree.insert(db_node, "end", text="Triggers")
-        self.indexes_node = self.tree.insert(db_node, "end", text="Indexes")
-        self.users_node = self.tree.insert(db_node, "end", text="Users")
-        self.show_sql_editor()
+        self.functions_node  = self.tree.insert(db_node, "end", text="Functions")
+        self.triggers_node   = self.tree.insert(db_node, "end", text="Triggers")
+        self.indexes_node    = self.tree.insert(db_node, "end", text="Indexes")
+        self.users_node      = self.tree.insert(db_node, "end", text="Users")
+
+        tk.Button(left, text="Cerrar sesión", command=self.logout).pack(
+            fill=tk.X, padx=5, pady=4)
+
+        # ── Panel derecho ──────────────────────────────────
+        self.right = tk.Frame(main_frame)
+        self.right.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+
+        # Tabs principales
+        self.tabs = ttk.Notebook(self.right)
+        self.tabs.pack(fill=tk.BOTH, expand=True)
+
+        self.tab_sync = tk.Frame(self.tabs)
+        self.tab_sql  = tk.Frame(self.tabs)
+        self.tab_data = tk.Frame(self.tabs)
+
+        self.tabs.add(self.tab_sync, text="  🔄  Sincronización  ")
+        self.tabs.add(self.tab_sql,  text="  🖊  Editor SQL  ")
+        self.tabs.add(self.tab_data, text="  📋  Datos  ")
+
+        self._build_sync_tab()
+        self._build_sql_tab()
+
+    # tab de sync
+    def _build_sync_tab(self):
+        pad = {"padx": 16, "pady": 8}
+
+        # ─── Estado conexiones ────────────────────────────
+        status_frame = tk.LabelFrame(
+            self.tab_sync, text=" Estado de conexiones ", font=("Arial", 10, "bold"))
+        status_frame.pack(fill="x", **pad)
+
+        self.lbl_slave  = tk.Label(status_frame, text="● SLAVE  (MySQL)",
+                                   fg="green", font=("Arial", 10))
+        self.lbl_slave.pack(anchor="w", padx=10, pady=4)
+
+        self.lbl_master = tk.Label(status_frame, text="● MASTER (PostgreSQL)",
+                                   fg="green", font=("Arial", 10))
+        self.lbl_master.pack(anchor="w", padx=10, pady=4)
+
+        # ─── Botones de sincronización ────────────────────
+        btn_frame = tk.LabelFrame(
+            self.tab_sync, text=" Acciones ", font=("Arial", 10, "bold"))
+        btn_frame.pack(fill="x", **pad)
+
+        tk.Button(
+            btn_frame,
+            text="⬇  Sync-IN   (MASTER → SLAVE)",
+            font=("Arial", 11),
+            width=32, height=2,
+            bg="#4a90d9", fg="white",
+            command=self.run_sync_in
+        ).pack(side=tk.LEFT, padx=12, pady=10)
+
+        tk.Button(
+            btn_frame,
+            text="⬆  Sync-OUT  (SLAVE → MASTER)",
+            font=("Arial", 11),
+            width=32, height=2,
+            bg="#5c9e5c", fg="white",
+            command=self.run_sync_out
+        ).pack(side=tk.LEFT, padx=12, pady=10)
+
+        # ─── Barra de progreso ────────────────────────────
+        prog_frame = tk.Frame(self.tab_sync)
+        prog_frame.pack(fill="x", padx=16)
+
+        self.progress_var = tk.DoubleVar()
+        self.progress_bar = ttk.Progressbar(
+            prog_frame, variable=self.progress_var,
+            maximum=100, length=600)
+        self.progress_bar.pack(side=tk.LEFT, pady=4)
+
+        self.lbl_progress = tk.Label(prog_frame, text="", font=("Arial", 9))
+        self.lbl_progress.pack(side=tk.LEFT, padx=8)
+
+        # ─── Última sincronización ────────────────────────
+        last_frame = tk.LabelFrame(
+            self.tab_sync, text=" Última sincronización ", font=("Arial", 10, "bold"))
+        last_frame.pack(fill="x", **pad)
+
+        self.lbl_last_sync = tk.Label(
+            last_frame, text="Sin sincronizaciones registradas",
+            font=("Arial", 10), fg="#555")
+        self.lbl_last_sync.pack(anchor="w", padx=10, pady=6)
+
+        # ─── Historial / log de errores ───────────────────
+        log_frame = tk.LabelFrame(
+            self.tab_sync, text=" Historial de sincronizaciones ", font=("Arial", 10, "bold"))
+        log_frame.pack(fill=tk.BOTH, expand=True, **pad)
+
+        cols = ("ID", "Tipo", "Fecha y hora", "Estado", "Filas", "Mensaje")
+        self.log_tree = ttk.Treeview(log_frame, columns=cols, show="headings", height=10)
+
+        widths = [40, 60, 150, 70, 60, 400]
+        for col, w in zip(cols, widths):
+            self.log_tree.heading(col, text=col)
+            self.log_tree.column(col, width=w, anchor="w")
+
+        scrollbar = ttk.Scrollbar(log_frame, orient="vertical",
+                                  command=self.log_tree.yview)
+        self.log_tree.configure(yscrollcommand=scrollbar.set)
+        self.log_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        self.log_tree.tag_configure("ok",    background="#e8f5e9")
+        self.log_tree.tag_configure("error", background="#ffebee")
+
+        tk.Button(
+            self.tab_sync, text="↺ Refrescar historial",
+            command=self.refresh_history
+        ).pack(anchor="e", padx=16, pady=4)
+
+        # Cargar historial inicial
+        self.refresh_history()
 
 
-    def run(self):
-        self.root.mainloop()
+    def _build_sql_tab(self):
+        self.sql_text = tk.Text(self.tab_sql, height=10, font=("Courier", 10))
+        self.sql_text.pack(fill=tk.X, padx=8, pady=8)
 
-    def load_tables(self):
+        tk.Button(self.tab_sql, text="▶  Ejecutar SQL",
+                  command=self.execute_sql).pack(pady=4)
 
-        self.tree.delete(*self.tree.get_children(self.tables_node))
-        self.tree.delete(*self.tree.get_children(self.views_node))
+        self.sql_result_frame = tk.Frame(self.tab_sql)
+        self.sql_result_frame.pack(fill=tk.BOTH, expand=True)
 
-        tables, views = get_tables_and_views(self.connection)
 
-        for table in tables:
-            self.tree.insert(self.tables_node, "end", text=table)
+    def run_sync_in(self):
+        self._set_progress(0, "Iniciando Sync-IN…")
+        tables_in = list(self.mapping["tables_in"].keys())
+        total = len(tables_in)
+        done  = [0]
 
-        for view in views:
-            self.tree.insert(self.views_node, "end", text=view)
+        def progress(table, rows):
+            done[0] += 1
+            pct = (done[0] / total) * 100
+            self._set_progress(pct, f"Sincronizando {table}… ({rows} filas)")
+
+        def run():
+            ok, msg = sync_in(self.slave_conn, self.master_conn,
+                               self.mapping, progress_callback=progress)
+            self.root.after(0, lambda: self._on_sync_done(ok, msg))
+
+        threading.Thread(target=run, daemon=True).start()
+
+
+    def run_sync_out(self):
+        self._set_progress(0, "Iniciando Sync-OUT…")
+        tables_out = list(self.mapping["tables_out"].keys())
+        total = len(tables_out)
+        done  = [0]
+
+        def progress(table, rows):
+            done[0] += 1
+            pct = (done[0] / total) * 100
+            self._set_progress(pct, f"Subiendo {table}… ({rows} cambios)")
+
+        def run():
+            ok, msg = sync_out(self.slave_conn, self.master_conn,
+                                self.mapping, progress_callback=progress)
+            self.root.after(0, lambda: self._on_sync_done(ok, msg))
+
+        threading.Thread(target=run, daemon=True).start()
+
+    def _on_sync_done(self, ok, msg):
+        self._set_progress(100 if ok else 0, msg)
+        if ok:
+            messagebox.showinfo("Sincronización completa", msg)
+        else:
+            messagebox.showerror("Error en sincronización", msg)
+        self.refresh_history()
+
+    def _set_progress(self, pct, text):
+        self.progress_var.set(pct)
+        self.lbl_progress.config(text=text)
+        self.root.update_idletasks()
+
+
+    #  HISTORIAL
+
+
+    def refresh_history(self):
+        for row in self.log_tree.get_children():
+            self.log_tree.delete(row)
+
+        try:
+            history = get_sync_history(self.slave_conn, limit=30)
+            for h in history:
+                sync_id, sync_type, dt, status, message, rows = h
+                tag = "ok" if status == "OK" else "error"
+                self.log_tree.insert("", "end", values=(
+                    sync_id, sync_type,
+                    str(dt)[:19], status, rows,
+                    message or ""
+                ), tags=(tag,))
+
+            if history:
+                last = history[0]
+                self.lbl_last_sync.config(
+                    text=f"{last[1]}  ·  {str(last[2])[:19]}  ·  {last[3]}  ·  {last[5] or ''}"
+                )
+        except Exception as e:
+            self.lbl_last_sync.config(text=f"Error leyendo historial: {e}")
+
+    #  ÁRBOL DE OBJETOS
+
 
     def on_tree_click(self, event):
-
-        selected_item = self.tree.focus()
-        item_text = self.tree.item(selected_item, "text")
-
-        parent = self.tree.parent(selected_item)
-        parent_text = self.tree.item(parent, "text")
-
-        print("Click en:", item_text)
-
-        # Carpetas principales
-        if item_text == "Tables":
-            self.load_tables()
-
-        elif item_text == "Views":
-            self.load_tables()
-
-        elif item_text == "Procedures":
-            self.load_procedures_and_functions()
-
-        elif item_text == "Functions":
-            self.load_procedures_and_functions()
-
-        elif item_text == "Triggers":
-            self.load_triggers()
-
-        elif item_text == "Indexes":
-            self.load_indexes()
-
-        elif item_text == "Users":
-            self.load_users()
-
-
-        else:
-            self.selected_object = item_text
-            self.selected_type = parent_text
-
-
-            if parent_text in ["Tables", "Views"]:
-                self.load_table_data(item_text)
-
-    def load_table_data(self, table_name):
-
-        # Limpiar panel derecho
-        for widget in self.right_frame.winfo_children():
-            widget.destroy()
-
-        cursor = self.connection.cursor()
-        query = f"SELECT * FROM {table_name} LIMIT 100;"
-        cursor.execute(query)
-
-        rows = cursor.fetchall()
-        columns = [desc[0] for desc in cursor.description]
-
-        table = ttk.Treeview(self.right_frame, columns=columns, show="headings")
-        table.pack(fill=tk.BOTH, expand=True)
-
-        #creamos encabezados
-        for col in columns:
-            table.heading(col, text=col)
-            table.column(col, width=120)
-
-        #Creamos filas
-        for row in rows:
-            table.insert("", "end", values=row)
-
-    #funcion para dibujar el editor de texto en e area derecha dela ventana
-    def show_sql_editor(self):
-
-        # Limpiar panel derecho
-        for widget in self.right_frame.winfo_children():
-            widget.destroy()
-
-        # Editor SQL
-        self.sql_text = tk.Text(self.right_frame, height=10)
-        self.sql_text.pack(fill=tk.X, padx=5, pady=5)
-
-        # Botón ejecutar
-        run_button = tk.Button(
-            self.right_frame,
-            text="Ejecutar SQL",
-            command=self.execute_sql
-        )
-        run_button.pack(pady=5)
-
-        # Frame  d resultados
-        self.result_frame = tk.Frame(self.right_frame)
-        self.result_frame.pack(fill=tk.BOTH, expand=True)
-
-    def execute_sql(self):
-
-        query = self.sql_text.get("1.0", tk.END).strip()
-
-        cursor = self.connection.cursor()
-
-        try:
-            cursor.execute(query)
-
-            # Si devuelve datos (SELECT)
-            if cursor.description:
-
-                rows = cursor.fetchall()
-                columns = [desc[0] for desc in cursor.description]
-
-                self.show_results(columns, rows)
-
-            else:
-                # INSERT, UPDATE, DELETE, CREATE, etc...
-                self.connection.commit()
-                messagebox.showinfo("Éxito", "Sentencia ejecutada correctamente")
-
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
-
-    #funcion para pues mostrar los resultads de cuando ejecutamos la vaina sql que hicimos
-    def show_results(self, columns, rows):
-
-        # Limpiar resultados anteriores
-        for widget in self.result_frame.winfo_children():
-            widget.destroy()
-
-        table = ttk.Treeview(self.result_frame, columns=columns, show="headings")
-        table.pack(fill=tk.BOTH, expand=True)
-
-        for col in columns:
-            table.heading(col, text=col)
-            table.column(col, width=120)
-
-        for row in rows:
-            table.insert("", "end", values=row)
-
-    def logout(self):
-        self.connection.close()
-        self.root.destroy()
-
-        from login import LoginWindow
-        login = LoginWindow()
-        login.run()
-
-    def show_ddl(self):
-
-        if not hasattr(self, "selected_object"):
-            messagebox.showwarning("Aviso", "Seleccione un objeto primero")
-            return
-
-        cursor = self.connection.cursor()
-
-        obj = self.selected_object
-        obj_type = self.selected_type
-
-        try:
-            if obj_type == "Tables":
-                query = f"SHOW CREATE TABLE {obj};"
-            elif obj_type == "Views":
-                query = f"SHOW CREATE VIEW {obj};"
-            elif obj_type == "Procedures":
-                query = f"SHOW CREATE PROCEDURE {obj};"
-            elif obj_type == "Functions":
-                query = f"SHOW CREATE FUNCTION {obj};"
-            elif obj_type == "Triggers":
-                query = f"SHOW CREATE TRIGGER {obj};"
-            else:
-                messagebox.showwarning("Aviso", "DDL no disponible para este objeto")
-                return
-
-            cursor.execute(query)
-            result = cursor.fetchone()
-
-            ddl = None
-            for item in result:
-                if isinstance(item, str) and item.strip().upper().startswith("CREATE"):
-                    ddl = item
-                    break
-
-            if not ddl:
-                messagebox.showerror("Error", "No se pudo obtener el DDL")
-                return
-
-            # Limpiar panel derecho
-            for widget in self.right_frame.winfo_children():
-                widget.destroy()
-
-            ddl_text = tk.Text(self.right_frame)
-            ddl_text.pack(fill=tk.BOTH, expand=True)
-            ddl_text.insert(tk.END, ddl)
-
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
-
-    def show_create_table(self):
-
-        # Limpiar el panel derecho
-        for widget in self.right_frame.winfo_children():
-            widget.destroy()
-
-        container = tk.Frame(self.right_frame)
-        container.pack(anchor="w", padx=20, pady=20)
-
-        # --------- Info general-------
-        tk.Label(container, text="Nombre de la tabla:").grid(row=0, column=0, sticky="w")
-        self.table_name_entry = tk.Entry(container, width=30)
-        self.table_name_entry.grid(row=0, column=1, pady=5, sticky="w")
-
-        tk.Label(container, text=f"Schema: {self.database}").grid(row=1, column=0, sticky="w")
-
-        # -------Encabezados ----------
-        headers = ["Nombre Columna", "Datatype", "PK", "NN"]
-
-        for i, text in enumerate(headers):
-            tk.Label(container, text=text, font=("Arial", 10, "bold")).grid(
-                row=3, column=i, padx=10, sticky="w"
-            )
-
-        # ---- Frame columnas ----
-        self.columns_frame = tk.Frame(container)
-        self.columns_frame.grid(row=4, column=0, columnspan=4, sticky="w")
-
-        self.column_entries = []
-        self.add_column_row()
-
-        tk.Button(
-            container,
-            text="Agregar Columna",
-            command=self.add_column_row
-        ).grid(row=5, column=0, pady=10, sticky="w")
-
-        tk.Button(
-            container,
-            text="Crear Tabla",
-            command=self.create_table
-        ).grid(row=6, column=0, pady=20, sticky="w")
-
-    def add_column_row(self):
-
-        row_index = len(self.column_entries)
-
-        name_entry = tk.Entry(self.columns_frame, width=20)
-        name_entry.grid(row=row_index, column=0, padx=10, pady=3, sticky="w")
-
-        # ---- Wombocombobox de tipos -------
-        datatypes = [
-            "INT",
-            "VARCHAR(50)",
-            "VARCHAR(100)",
-            "VARCHAR(255)",
-            "TEXT",
-            "DATE",
-            "DATETIME",
-            "FLOAT",
-            "DOUBLE",
-            "DECIMAL(10,2)",
-            "BOOLEAN"
-        ]
-
-        type_combo = ttk.Combobox(
-            self.columns_frame,
-            values=datatypes,
-            width=18,
-            state="readonly"
-        )
-        type_combo.grid(row=row_index, column=1, padx=10, pady=3, sticky="w")
-        type_combo.set("INT")  # valor por defecto
-
-        pk_var = tk.BooleanVar()
-        pk_check = tk.Checkbutton(self.columns_frame, variable=pk_var)
-        pk_check.grid(row=row_index, column=2)
-
-        nn_var = tk.BooleanVar()
-        nn_check = tk.Checkbutton(self.columns_frame, variable=nn_var)
-        nn_check.grid(row=row_index, column=3)
-
-        self.column_entries.append((name_entry, type_combo, pk_var, nn_var))
-
-    def create_table(self):
-
-        table_name = self.table_name_entry.get()
-        columns_sql = []
-
-        for name_entry, type_entry, pk_var, nn_var in self.column_entries:
-
-            name = name_entry.get()
-            col_type = type_entry.get()
-
-            if not name or not col_type:
-                continue
-
-            col_def = f"{name} {col_type}"
-
-            if nn_var.get():
-                col_def += " NOT NULL"
-
-            if pk_var.get():
-                col_def += " PRIMARY KEY"
-
-            columns_sql.append(col_def)
-
-        if not table_name or not columns_sql:
-            messagebox.showerror("Error", "Datos incompletos")
-            return
-
-        query = f"CREATE TABLE {table_name} ({', '.join(columns_sql)});"
-
-        try:
-            cursor = self.connection.cursor()
-            cursor.execute(query)
-            self.connection.commit()
-            messagebox.showinfo("Éxito", "Tabla creada correctamente")
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
-
-    def show_create_view(self):
-
-        # Limpiar elpanel derecho
-        for widget in self.right_frame.winfo_children():
-            widget.destroy()
-
-        container = tk.Frame(self.right_frame)
-        container.pack(anchor="w", padx=20, pady=20)
-
-        tk.Label(container, text="Nombre de la vista").grid(row=0, column=0, sticky="w")
-        self.view_name_entry = tk.Entry(container, width=30)
-        self.view_name_entry.grid(row=0, column=1, pady=5, sticky="w")
-
-        tk.Label(container, text="Definición SELECT").grid(row=1, column=0, sticky="w")
-
-        self.view_sql_text = tk.Text(container, height=10, width=60)
-        self.view_sql_text.grid(row=2, column=0, columnspan=2, pady=10)
-
-        tk.Button(
-            container,
-            text="Crear Vista",
-            command=self.create_view
-        ).grid(row=3, column=0, pady=10, sticky="w")
-
-    def create_view(self):
-
-        view_name = self.view_name_entry.get()
-        select_sql = self.view_sql_text.get("1.0", tk.END).strip()
-
-        if not view_name or not select_sql:
-            messagebox.showerror("Error", "Datos incompletos")
-            return
-
-        query = f"CREATE VIEW {view_name} AS {select_sql};"
-
-        try:
-            cursor = self.connection.cursor()
-            cursor.execute(query)
-            self.connection.commit()
-            messagebox.showinfo("Éxito", "Vista creada correctamente")
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
+        selected = self.tree.focus()
+        text     = self.tree.item(selected, "text")
+        parent   = self.tree.item(self.tree.parent(selected), "text")
+
+        if text == "Tables":    self.load_tables()
+        elif text == "Views":   self.load_tables()
+        elif text in ("Procedures", "Functions"): self.load_procedures_and_functions()
+        elif text == "Triggers": self.load_triggers()
+        elif text == "Indexes":  self.load_indexes()
+        elif text == "Users":    self.load_users()
+        elif parent in ("Tables", "Views"):
+            self.load_table_data(text)
+
+    def load_tables(self):
+        self.tree.delete(*self.tree.get_children(self.tables_node))
+        self.tree.delete(*self.tree.get_children(self.views_node))
+        tables, views = get_tables_and_views(self.slave_conn)
+        for t in tables: self.tree.insert(self.tables_node, "end", text=t)
+        for v in views:  self.tree.insert(self.views_node,  "end", text=v)
 
     def load_procedures_and_functions(self):
-
-        # Limpiar juquera de nodos anteriores
         self.tree.delete(*self.tree.get_children(self.procedures_node))
         self.tree.delete(*self.tree.get_children(self.functions_node))
-
-        procedures, functions = get_procedures_and_functions(
-            self.connection,
-            self.database
-        )
-
-        for proc in procedures:
-            self.tree.insert(self.procedures_node, "end", text=proc)
-
-        for func in functions:
-            self.tree.insert(self.functions_node, "end", text=func)
+        procs, funcs = get_procedures_and_functions(self.slave_conn, self.database)
+        for p in procs: self.tree.insert(self.procedures_node, "end", text=p)
+        for f in funcs: self.tree.insert(self.functions_node,  "end", text=f)
 
     def load_triggers(self):
         self.tree.delete(*self.tree.get_children(self.triggers_node))
-        triggers = get_triggers(self.connection, self.database)
-        for t in triggers:
+        for t in get_triggers(self.slave_conn, self.database):
             self.tree.insert(self.triggers_node, "end", text=t)
 
     def load_indexes(self):
         self.tree.delete(*self.tree.get_children(self.indexes_node))
-        indexes = get_indexes(self.connection)
-        for i in indexes:
+        for i in get_indexes(self.slave_conn):
             self.tree.insert(self.indexes_node, "end", text=i)
 
     def load_users(self):
         self.tree.delete(*self.tree.get_children(self.users_node))
-        users = get_users(self.connection)
-        for u in users:
+        for u in get_users(self.slave_conn):
             self.tree.insert(self.users_node, "end", text=u)
+
+    def load_table_data(self, table_name):
+        self.tabs.select(self.tab_data)
+        for w in self.tab_data.winfo_children():
+            w.destroy()
+
+        cursor = self.slave_conn.cursor()
+        cursor.execute(f"SELECT * FROM `{table_name}` LIMIT 100")
+        rows    = cursor.fetchall()
+        columns = [d[0] for d in cursor.description]
+
+        tbl = ttk.Treeview(self.tab_data, columns=columns, show="headings")
+        tbl.pack(fill=tk.BOTH, expand=True)
+        for col in columns:
+            tbl.heading(col, text=col)
+            tbl.column(col, width=110)
+        for row in rows:
+            tbl.insert("", "end", values=row)
+
+    #  EDITOR SQL
+
+    def execute_sql(self):
+        query  = self.sql_text.get("1.0", tk.END).strip()
+        cursor = self.slave_conn.cursor()
+        try:
+            cursor.execute(query)
+            if cursor.description:
+                rows    = cursor.fetchall()
+                columns = [d[0] for d in cursor.description]
+                for w in self.sql_result_frame.winfo_children():
+                    w.destroy()
+                tbl = ttk.Treeview(self.sql_result_frame, columns=columns, show="headings")
+                tbl.pack(fill=tk.BOTH, expand=True)
+                for col in columns:
+                    tbl.heading(col, text=col)
+                    tbl.column(col, width=120)
+                for row in rows:
+                    tbl.insert("", "end", values=row)
+            else:
+                self.slave_conn.commit()
+                messagebox.showinfo("Éxito", "Sentencia ejecutada correctamente")
+        except Exception as e:
+            messagebox.showerror("Error SQL", str(e))
+
+    #  LOGOUT
+    def logout(self):
+        self.slave_conn.close()
+        self.master_conn.close()
+        self.root.destroy()
+        from login import LoginWindow
+        LoginWindow().run()
+
+    def run(self):
+        self.root.mainloop()

@@ -20,7 +20,6 @@ def get_tables_and_views(connection):
 def get_procedures_and_functions(connection, database):
 
     cursor = connection.cursor()
-
     # Obtener procedures
     cursor.execute(
         f"SHOW PROCEDURE STATUS WHERE Db = '{database}';"
@@ -45,12 +44,11 @@ def get_triggers(connection, database):
     result = cursor.fetchall()
     return [row[0] for row in result]
 
-
 def get_indexes(connection):
     cursor = connection.cursor()
     cursor.execute("SHOW TABLES")
     tables = [row[0] for row in cursor.fetchall()]
-
+    # por esta fucking basura de funcion perdi 5 puntos, wow pegame un tiro
     index_names = set()
     for table in tables:
         cursor.execute(f"SHOW INDEX FROM `{table}`")

@@ -1,0 +1,53 @@
+{
+  "slave": {
+    "engine": "mysql",
+    "database": "pagila_slave"
+  },
+  "master": {
+    "engine": "postgresql",
+    "database": "pagila"
+  },
+  "tables_in": {
+    "actor":         { "master_table": "actor",         "pk": "actor_id" },
+    "category":      { "master_table": "category",      "pk": "category_id" },
+    "language":      { "master_table": "language",      "pk": "language_id" },
+    "film":          { "master_table": "film",          "pk": "film_id" },
+    "film_actor":    { "master_table": "film_actor",    "pk": ["actor_id", "film_id"] },
+    "film_category": { "master_table": "film_category", "pk": ["film_id", "category_id"] },
+    "country":       { "master_table": "country",       "pk": "country_id" },
+    "city":          { "master_table": "city",          "pk": "city_id" },
+    "address":       { "master_table": "address",       "pk": "address_id" },
+    "store":         { "master_table": "store",         "pk": "store_id" },
+    "staff":         { "master_table": "staff",         "pk": "staff_id" },
+    "inventory":     { "master_table": "inventory",     "pk": "inventory_id" }
+  },
+  "tables_out": {
+    "customer": {
+      "master_table": "customer",
+      "log_table":    "customer_log",
+      "pk":           "customer_id",
+      "fields": [
+        "customer_id", "store_id", "first_name", "last_name",
+        "email", "address_id", "active", "create_date", "last_update"
+      ]
+    },
+    "rental": {
+      "master_table": "rental",
+      "log_table":    "rental_log",
+      "pk":           "rental_id",
+      "fields": [
+        "rental_id", "rental_date", "inventory_id",
+        "customer_id", "return_date", "staff_id", "last_update"
+      ]
+    },
+    "payment": {
+      "master_table": "payment",
+      "log_table":    "payment_log",
+      "pk":           "payment_id",
+      "fields": [
+        "payment_id", "customer_id", "staff_id",
+        "rental_id", "amount", "payment_date", "last_update"
+      ]
+    }
+  }
+}
