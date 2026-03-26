@@ -45,14 +45,19 @@ def get_triggers(connection, database):
     result = cursor.fetchall()
     return [row[0] for row in result]
 
+
 def get_indexes(connection):
     cursor = connection.cursor()
-    cursor.execute("""
-        SELECT DISTINCT INDEX_NAME
-        FROM INFORMATION_SCHEMA.STATISTICS
-    """)
-    result = cursor.fetchall()
-    return [row[0] for row in result]
+    cursor.execute("SHOW TABLES")
+    tables = [row[0] for row in cursor.fetchall()]
+
+    index_names = set()
+    for table in tables:
+        cursor.execute(f"SHOW INDEX FROM `{table}`")
+        for row in cursor.fetchall():
+            index_names.add(row[2])
+
+    return list(index_names)
 
 def get_users(connection):
     cursor = connection.cursor()
